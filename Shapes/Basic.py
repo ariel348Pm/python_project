@@ -13,12 +13,15 @@ class Sprite(ABC):
 
 
 class Shape(Sprite):
+    basic_shapes = ["Line", "Circle", "Triangle", "Rectangle", "polygon"]
+
     def __init__(self, new_specifications):
-        specifications = {"Color": (0, 0, 0), "FillingColor": None, "Thickness": 5,
+        specifications = {"Color": "(0, 0, 0)", "FillingColor": None, "Thickness": 5,
                           "TranslateX": 0, "TranslateY": 0, "Rotate": 0, "Scale": 1}
         specifications.update(new_specifications)
         self.points = np.array(object)
         self.center = None
+        self.complex_center = None
         self.specifications = Shape.parse_specifications(specifications)
 
     def transform(self, translation=(0, 0), rotation=0, scale_change=1):
@@ -31,8 +34,14 @@ class Shape(Sprite):
         self.points = Shape.translate((translation_x, -translation_y), self.points)
         self.unpack_points()
 
+    def copy_transform_data(self, specifications):
+        self.specifications.update(specifications)
+
     def get_center(self):
         return self.center
+
+    def set_complex_center(self, center):
+        self.complex_center = center
 
     @staticmethod
     def translate(translation, points):
@@ -51,13 +60,11 @@ class Shape(Sprite):
 
     @staticmethod
     def parse_specifications(specifications):
-        specifications["Color"] = Shape.parse_color(specifications["Color"])
-        specifications["FillingColor"] = Shape.parse_color(specifications["FillingColor"])
-        specifications["Thickness"] = int(specifications["Thickness"])
-        specifications["TranslateX"] = int(specifications["TranslateX"])
-        specifications["TranslateY"] = int(specifications["TranslateY"])
-        specifications["Rotate"] = int(specifications["Rotate"])
-        specifications["Scale"] = int(specifications["Scale"])
+        for key in specifications:
+            if key in ["Color", "FillingColor"]:
+                specifications[key] = Shape.parse_color(specifications[key])
+            elif key in ["Thickness", "TranslateX", "TranslateY", "Rotate", "Scale"]:
+                specifications[key] = float(specifications[key])
         return specifications
 
     @staticmethod
@@ -84,16 +91,16 @@ class Shape(Sprite):
 
 class Line(Shape):
 
-    def __init__(self, p1, p2, specifications):
+    def __init__(self, p1, p2, specifications={}):
         super().__init__(specifications)
         self.p1 = p1
         self.p2 = p2
-        self.color = specifications["Color"]
-        self.thickness = specifications["Thickness"]
+        self.color = self.specifications["Color"]
+        self.thickness = self.specifications["Thickness"]
         self.points = np.array([p1, p2]).T
         self.center = self.points.mean(axis=1)
-        self.transform((specifications["TranslateX"], specifications["TranslateY"]), specifications["Rotate"],
-                       specifications["Scale"])
+        self.transform((self.specifications["TranslateX"], self.specifications["TranslateX"]),
+                       self.specifications["Rotate"], self.specifications["Scale"])
 
     def unpack_points(self):
         self.p1 = Point((self.points[0, 0], self.points[1, 0]))
@@ -101,21 +108,21 @@ class Line(Shape):
 
     def draw_on(self, canvas):
         cv.line(canvas, (round(self.p1.x), round(self.p1.y)), (round(self.p2.x), round(self.p2.y)), self.color,
-                self.thickness)
+                round(self.thickness))
 
 
 class Circle(Shape):
 
-    def __init__(self, center, radius, specifications):
+    def __init__(self, center, radius, specifications={}):
         super().__init__(specifications)
         self.center = center
         self.radius = radius
-        self.color = specifications["Color"]
-        self.thickness = specifications["Thickness"]
-        self.fill = specifications["FillingColor"]
+        self.color = self.specifications["Color"]
+        self.thickness = self.specifications["Thickness"]
+        self.fill = self.specifications["FillingColor"]
         self.points = np.array([self.center + Point((0, self.radius)), self.center - Point((0, self.radius))]).T
-        self.transform((specifications["TranslateX"], specifications["TranslateY"]), specifications["Rotate"],
-                       specifications["Scale"])
+        self.transform((self.specifications["TranslateX"], self.specifications["TranslateX"]),
+                       self.specifications["Rotate"], self.specifications["Scale"])
 
     def unpack_points(self):
         p1 = Point((self.points[0, 0], self.points[1, 0]))
@@ -127,20 +134,21 @@ class Circle(Shape):
         if self.fill is not None:
             cv.circle(canvas, (round(self.center.x), round(self.center.y)), round(self.radius), self.fill, -1)
 
-        cv.circle(canvas, (round(self.center.x), round(self.center.y)), round(self.radius), self.color, self.thickness)
+        cv.circle(canvas, (round(self.center.x), round(self.center.y)), round(self.radius),
+                  self.color, round(self.thickness))
 
 
 class Polygon(Shape):
 
-    def __init__(self, pts, specifications):
+    def __init__(self, pts, specifications={}):
         super().__init__(specifications)
         self.points = np.array(pts).T
-        self.color = specifications["Color"]
-        self.thickness = specifications["Thickness"]
-        self.fill = specifications["FillingColor"]
+        self.color = self.specifications["Color"]
+        self.thickness = self.specifications["Thickness"]
+        self.fill = self.specifications["FillingColor"]
         self.center = self.points.mean(axis=1)
-        self.transform((specifications["TranslateX"], specifications["TranslateY"]), specifications["Rotate"],
-                       specifications["Scale"])
+        self.transform((self.specifications["TranslateX"], self.specifications["TranslateX"]),
+                       self.specifications["Rotate"], self.specifications["Scale"])
 
     def unpack_points(self):
         pass
@@ -152,4 +160,4 @@ class Polygon(Shape):
         if self.fill is not None:
             cv.fillPoly(canvas, np.int32([self.points]), self.fill)
 
-        cv.polylines(canvas, np.int32([self.points]), True, self.color, self.thickness)
+        cv.polylines(canvas, np.int32([self.points]), True, self.color, round(self.thickness))
