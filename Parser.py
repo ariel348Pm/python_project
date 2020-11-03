@@ -1,6 +1,8 @@
 import xml.etree.ElementTree as Et
 from Shapes.Point import Point
 from Shapes.Basic import Line, Circle, Polygon
+from enum import Enum
+import re
 
 
 class XmlParser(object):
@@ -10,28 +12,27 @@ class XmlParser(object):
     def __init__(self, path):
         self.tree = Et.parse(path)
         self.tree_root = self.tree.getroot()
-        self.basic_list = ["Line", "Circle", "Triangle", "Rectangle", "polygon"]  # todo: enum
+        # self.basic_shapes = Enum("basic_shapes", ["Line", "Circle", "Triangle", "Rectangle", "polygon"])
+        self.basic_shapes = ["Line", "Circle", "Triangle", "Rectangle", "polygon"]  # todo: enum
 
     def get_shapes(self):
         shapes_list = list()
         for child in self.tree_root:
-            if child.tag in self.basic_list:
+            if child.tag in self.basic_shapes:
                 shapes_list.append(self.get_basic(child))
             else:
                 shapes_list.append(self.get_composite(child))
 
         return shapes_list
 
-    def get_basic(self, root):
-        color = (0, 0, 0)
-        fill = None
-        thickness = 5
+    @staticmethod
+    def get_basic(root):
+        specifications = {"Color": (0, 0, 0), "Fill": None, "Thickness": 5,
+                          "TranslateX": 0, "TranslateY": 0, "Rotate": 0, "Scale": 1}
 
-        translate_x = 0
-        translate_y = 0
-
-        rotate = 0
-        scale = 1
+        for s in specifications:
+            if s in root.attrib:
+                specifications[s] = root.attrib[s]
 
         if "Color" in root.attrib:
             color = XmlParser.parse_color(root.attrib["Color"])  # todo: no if
@@ -52,21 +53,25 @@ class XmlParser(object):
         if root.tag == "Line":
             p1 = Point((int(root[0].attrib["X"]), int(root[0].attrib["Y"])))
             p2 = Point((int(root[1].attrib["X"]), int(root[1].attrib["Y"])))
-
-            return Line(p1, p2, color, thickness)
+            line = Line(p1, p2, color, thickness)
+            line.transform((translate_x, translate_y), rotate, scale)
+            return line
 
         if root.tag == "Circle":
             center = Point((int(root.attrib["X"]), int(root.attrib["Y"])))
             radius = int(root.attrib["Radius"])
-
-            return Circle(center, radius, color, thickness, fill)
+            circle = Circle(center, radius, color, thickness, fill)
+            circle.transform((translate_x, translate_y), rotate, scale)
+            return circle
 
         if root.tag in ["Triangle", "Rectangle", "Polygon"]:
             points = list()
             for child in root:
                 points.append(Point((int(child.attrib["X"]), int(child.attrib["Y"]))))
 
-            return Polygon(points, color, thickness, fill)
+            polygon = Polygon(points, color, thickness, fill)
+            polygon.transform((translate_x, translate_y), rotate, scale)
+            return polygon
 
     def get_composite(self, root):
         pass
@@ -83,10 +88,15 @@ class XmlParser(object):
 
     @staticmethod
     def parse_color(color):
+        bgr_regex = r"^\((?:\d|[1-9][0-9]|1\d{2}|2[0-4]\d|25[0-5])(?:" \
+                    r",\s*(?:\d|[1-9][0-9]|1\d{2}|2[0-4]\d|25[0-5])){2}\)$"
+
         colors = {"Black": (0, 0, 0), "White": (255, 255, 255), "Red": (0, 0, 255), "Green": (0, 255, 0),
                   "Blue": (255, 0, 0), "Cyan": (255, 255, 0), "Magenta": (255, 0, 255), "Yellow": (0, 255, 255)}
 
         if color in colors:
             return colors[color]
+        elif re.search(bgr_regex, color):
+            return tuple(map(int, color.replace('(', '').replace(')', '').split(', ')))
         else:
-            return tuple(map(int, color.replace('(', '').replace(')', '').split(', ')))  # todo: make regex
+            raise Exception("Color unrecognized")
