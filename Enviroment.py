@@ -23,3 +23,7 @@ class Manager(object):
         cv.imshow("image", self.canvas)
         cv.waitKey(0)
         cv.destroyAllWindows()
+
+    def save_canvas(self, path):
+        cv.imwrite(path, self.canvas)
+
