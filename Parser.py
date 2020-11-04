@@ -59,7 +59,7 @@ class XmlParser(object):
 
         composite = deepcopy(Composite.complex_shapes[name])
         composite.copy_transform_data(Shape.parse_specifications(specifications))
-        composite.transform((composite.specifications["TranslateX"], composite.specifications["TranslateY"]),
+        composite.transform(composite.get_center(), (composite.specifications["TranslateX"], composite.specifications["TranslateY"]),
                             composite.specifications["Rotate"], composite.specifications["Scale"])
         return composite
 

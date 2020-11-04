@@ -23,14 +23,12 @@ class Shape(Sprite):
         self.center = None
         self.specifications = Shape.parse_specifications(specifications)
 
-    def transform(self, translation=(0, 0), rotation=0, scale_change=1):
-        translation_x, translation_y = translation
-
-        self.points = self.points - self.center.reshape((2, 1))
+    def transform(self, center, translation=(0, 0), rotation=0, scale_change=1):
+        self.points = self.points - center.reshape((2, 1))
         self.points = self.rotate(-rotation, self.points)
         self.points = self.scale(scale_change, self.points)
-        self.points = self.points + self.center.reshape((2, 1))
-        self.points = self.translate((translation_x, -translation_y), self.points)
+        self.points = self.points + center.reshape((2, 1))
+        self.points = self.translate(translation, self.points)
         self.unpack_points()
 
     def copy_transform_data(self, specifications):
@@ -95,7 +93,7 @@ class Line(Shape):
         self.thickness = self.specifications["Thickness"]
         self.points = np.array([p1, p2]).T
         self.center = self.points.mean(axis=1)
-        self.transform((self.specifications["TranslateX"], self.specifications["TranslateX"]),
+        self.transform(self.center, (self.specifications["TranslateX"], self.specifications["TranslateX"]),
                        self.specifications["Rotate"], self.specifications["Scale"])
 
     def unpack_points(self):
@@ -117,7 +115,7 @@ class Circle(Shape):
         self.thickness = self.specifications["Thickness"]
         self.fill = self.specifications["FillingColor"]
         self.points = np.array([self.center + Point((0, self.radius)), self.center - Point((0, self.radius))]).T
-        self.transform((self.specifications["TranslateX"], self.specifications["TranslateX"]),
+        self.transform(self.center, (self.specifications["TranslateX"], self.specifications["TranslateX"]),
                        self.specifications["Rotate"], self.specifications["Scale"])
 
     def unpack_points(self):
@@ -143,7 +141,7 @@ class Polygon(Shape):
         self.thickness = self.specifications["Thickness"]
         self.fill = self.specifications["FillingColor"]
         self.center = self.points.mean(axis=1)
-        self.transform((self.specifications["TranslateX"], self.specifications["TranslateX"]),
+        self.transform(self.center, (self.specifications["TranslateX"], self.specifications["TranslateX"]),
                        self.specifications["Rotate"], self.specifications["Scale"])
 
     def unpack_points(self):
