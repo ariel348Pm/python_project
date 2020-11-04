@@ -11,7 +11,7 @@ class Composite(Shape):
         self.shapes = shapes
         self.points = np.array([shape.get_center() for shape in shapes]).T
         self.center = self.points.mean(axis=1)
-        self.transform(self.center, (self.specifications["TranslateX"], self.specifications["TranslateX"]),
+        self.transform(self.center, (self.specifications["TranslateX"], self.specifications["TranslateY"]),
                        self.specifications["Rotate"], self.specifications["Scale"])
 
     def transform(self, center, translation=(0, 0), rotation=0, scale_change=1):

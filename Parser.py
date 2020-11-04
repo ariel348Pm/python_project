@@ -60,7 +60,8 @@ class XmlParser(object):
                 shapes = XmlParser.get_fractal_shapes(root, 5, name, root)
             else:
                 shapes = XmlParser.get_shapes(root)
-            Composite.complex_shapes[name] = Composite(name, shapes, root.attrib)
+            Composite.complex_shapes[name] = Composite(name, shapes,
+                                                       Shape.parse_specifications(root.attrib))
             if draw == "No":
                 return None
 
@@ -74,17 +75,20 @@ class XmlParser(object):
     @staticmethod
     def get_fractal_shapes(root, depth, name, composite_root):
         shapes = list()
-        new_shapes = list()
         if depth <= 0:
             return None
 
         for child in root:
             if child.tag == name:
-                shape = XmlParser.get_fractal_shapes(composite_root, depth - 1, name, composite_root)
-                if shape is not None:
-                    shapes.extend(shape)
+                composite_shapes = XmlParser.get_fractal_shapes(composite_root, depth - 1, name, composite_root)
+                if composite_shapes is None:
+                    continue
+                shape = Composite(name + str(depth), composite_shapes,
+                                  Shape.parse_specifications(child.attrib))
             else:
-                shapes.append(XmlParser.get_shape(child))
+                shape = XmlParser.get_shape(child)
+
+            shapes.append(shape)
 
         return shapes
 
