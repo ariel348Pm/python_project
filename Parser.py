@@ -15,14 +15,18 @@ class XmlParser(object):
     def get_shapes(root):
         shapes_list = list()
         for child in root:
-            if child.tag in Shape.basic_shapes:
-                shapes_list.append(XmlParser.get_basic(child))
-            elif (child.tag in Composite.complex_shapes) or (child.tag == "Composite"):
-                shapes_list.append(XmlParser.get_composite(child))
-            else:
-                raise Exception("Unknown shape")
+            shapes_list.append(XmlParser.get_shape(child))
 
         return [shape for shape in shapes_list if shape is not None]
+
+    @staticmethod
+    def get_shape(root):
+        if root.tag in Shape.basic_shapes:
+            return XmlParser.get_basic(root)
+        elif (root.tag in Composite.complex_shapes) or (root.tag == "Composite"):
+            return XmlParser.get_composite(root)
+        else:
+            raise Exception("Unknown shape")
 
     @staticmethod
     def get_basic(root):
@@ -52,7 +56,10 @@ class XmlParser(object):
         if name == "Composite":
             name = specifications["Name"]
             draw = specifications["Draw"]
-            shapes = XmlParser.get_shapes(root)
+            if name in [child.tag for child in root]:
+                shapes = XmlParser.get_fractal_shapes(root, 5, name, root)
+            else:
+                shapes = XmlParser.get_shapes(root)
             Composite.complex_shapes[name] = Composite(name, shapes, root.attrib)
             if draw == "No":
                 return None
@@ -64,6 +71,23 @@ class XmlParser(object):
                             composite.specifications["Rotate"], composite.specifications["Scale"])
         return composite
 
+    @staticmethod
+    def get_fractal_shapes(root, depth, name, composite_root):
+        shapes = list()
+        new_shapes = list()
+        if depth <= 0:
+            return None
+
+        for child in root:
+            if child.tag == name:
+                shape = XmlParser.get_fractal_shapes(composite_root, depth - 1, name, composite_root)
+                if shape is not None:
+                    shapes.extend(shape)
+            else:
+                shapes.append(XmlParser.get_shape(child))
+
+        return shapes
+
     def print_tree(self):
         root = self.tree_root
         self.print_tree_wrapped(root)
@@ -73,4 +97,3 @@ class XmlParser(object):
         print(root.tag, root.attrib)
         for child in root:
             XmlParser.print_tree_wrapped(child)
-
