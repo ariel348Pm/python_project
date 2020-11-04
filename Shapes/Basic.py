@@ -21,7 +21,6 @@ class Shape(Sprite):
         specifications.update(new_specifications)
         self.points = np.array(object)
         self.center = None
-        self.complex_center = None
         self.specifications = Shape.parse_specifications(specifications)
 
     def transform(self, translation=(0, 0), rotation=0, scale_change=1):
@@ -31,7 +30,7 @@ class Shape(Sprite):
         self.points = self.rotate(-rotation, self.points)
         self.points = self.scale(scale_change, self.points)
         self.points = self.points + self.center.reshape((2, 1))
-        self.points = Shape.translate((translation_x, -translation_y), self.points)
+        self.points = self.translate((translation_x, -translation_y), self.points)
         self.unpack_points()
 
     def copy_transform_data(self, specifications):
@@ -39,9 +38,6 @@ class Shape(Sprite):
 
     def get_center(self):
         return self.center
-
-    def set_complex_center(self, center):
-        self.complex_center = center
 
     @staticmethod
     def translate(translation, points):

@@ -15,12 +15,18 @@ class Composite(Shape):
                        self.specifications["Rotate"], self.specifications["Scale"])
 
     def transform(self, translation=(0, 0), rotation=0, scale_change=1):
+        translation_x, translation_y = translation
+
         for shape in self.shapes:
-            shape.transform(translation, rotation, scale_change)
+            shape.points = shape.points - self.center.reshape((2, 1))
+            shape.points = shape.rotate(-rotation, shape.points)
+            shape.points = shape.scale(scale_change, shape.points)
+            shape.points = shape.points + self.center.reshape((2, 1))
+            shape.points = Shape.translate((translation_x, -translation_y), shape.points)
+            shape.unpack_points()
 
     def unpack_points(self):
-        for shape, point in zip(self.shapes, self.points):
-            shape.set_center(point)
+        pass
 
     def draw_on(self, canvas):
         for shape in self.shapes:

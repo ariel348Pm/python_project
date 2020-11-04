@@ -3,7 +3,6 @@ from Shapes.Point import Point
 from Shapes.Basic import Shape, Line, Circle, Polygon
 from Shapes.Complex import Composite
 from copy import deepcopy
-from enum import Enum
 
 
 class XmlParser(object):

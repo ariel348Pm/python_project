@@ -10,6 +10,9 @@ class Manager(object):
     def add_sprite(self, sprite):
         self.sprites.append(sprite)
 
+    def add_sprites(self, sprites):
+        self.sprites.extend(sprites)
+
     def remove_sprite(self, sprite):
         self.sprites.remove(sprite)
 
