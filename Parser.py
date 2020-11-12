@@ -23,10 +23,10 @@ class XmlParser(object):
     def get_shape(root):
         if root.tag in Shape.basic_shapes:
             return XmlParser.get_basic(root)
-        elif (root.tag in Composite.complex_shapes) or (root.tag == "Composite"):
+        if (root.tag in Composite.complex_shapes) or (root.tag == "Composite"):
             return XmlParser.get_composite(root)
-        else:
-            raise Exception("Unknown shape")
+
+        raise Exception("Unknown shape")
 
     @staticmethod
     def get_basic(root):
@@ -51,40 +51,42 @@ class XmlParser(object):
 
     @staticmethod
     def get_composite(root):
+        if (root.tag not in Composite.complex_shapes) and (root.tag != "Composite"):
+            raise Exception("Unknown shape")
+
         specifications = root.attrib
-        name = root.tag
-        if name == "Composite":
+        if root.tag == "Composite":
             name = specifications["Name"]
             draw = specifications["Draw"]
             if name in [child.tag for child in root]:
-                shapes = XmlParser.get_fractal_shapes(root, 5, name, root)
+                shapes = XmlParser.get_fractal_shapes(root, 5, name)
             else:
                 shapes = XmlParser.get_shapes(root)
-            Composite.complex_shapes[name] = Composite(name, shapes,
-                                                       Shape.parse_specifications(root.attrib))
+            Composite.complex_shapes[name] = Composite(name, shapes, root.attrib)
             if draw == "No":
                 return None
+        else:
+            name = root.tag
 
         composite = deepcopy(Composite.complex_shapes[name])
-        composite.copy_transform_data(Shape.parse_specifications(specifications))
+        composite.copy_transform_data(specifications)
         composite.transform(composite.get_center(),
                             (composite.specifications["TranslateX"], composite.specifications["TranslateY"]),
                             composite.specifications["Rotate"], composite.specifications["Scale"])
         return composite
 
     @staticmethod
-    def get_fractal_shapes(root, depth, name, composite_root):
+    def get_fractal_shapes(root, depth, name):
         shapes = list()
         if depth <= 0:
             return None
 
         for child in root:
             if child.tag == name:
-                composite_shapes = XmlParser.get_fractal_shapes(composite_root, depth - 1, name, composite_root)
+                composite_shapes = XmlParser.get_fractal_shapes(root, depth - 1, name)
                 if composite_shapes is None:
                     continue
-                shape = Composite(name + str(depth), composite_shapes,
-                                  Shape.parse_specifications(child.attrib))
+                shape = Composite(name, composite_shapes, child.attrib)
             else:
                 shape = XmlParser.get_shape(child)
 
