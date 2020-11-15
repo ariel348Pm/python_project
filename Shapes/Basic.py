@@ -83,28 +83,6 @@ class Shape(Sprite):
         pass
 
 
-class Line(Shape):
-
-    def __init__(self, p1, p2, specifications={}):
-        super().__init__(specifications)
-        self.p1 = p1
-        self.p2 = p2
-        self.color = self.specifications["Color"]
-        self.thickness = self.specifications["Thickness"]
-        self.points = np.array([p1, p2]).T
-        self.center = self.points.mean(axis=1)
-        self.transform(self.center, (self.specifications["TranslateX"], self.specifications["TranslateX"]),
-                       self.specifications["Rotate"], self.specifications["Scale"])
-
-    def unpack_points(self):
-        self.p1 = Point((self.points[0, 0], self.points[1, 0]))
-        self.p2 = Point((self.points[0, 1], self.points[1, 1]))
-
-    def draw_on(self, canvas):
-        cv.line(canvas, (round(self.p1.x), round(self.p1.y)), (round(self.p2.x), round(self.p2.y)), self.color,
-                round(self.thickness))
-
-
 class Circle(Shape):
 
     def __init__(self, center, radius, specifications={}):

@@ -1,6 +1,6 @@
 import xml.etree.ElementTree as Et
 from Shapes.Point import Point
-from Shapes.Basic import Shape, Line, Circle, Polygon
+from Shapes.Basic import Shape, Circle, Polygon
 from Shapes.Complex import Composite
 from copy import deepcopy
 
@@ -11,8 +11,9 @@ class XmlParser(object):
         self.tree = Et.parse(path)
         self.tree_root = self.tree.getroot()
 
-    @staticmethod
-    def get_shapes(root):
+    def get_shapes(self, root=None):
+        if root is None:
+            root = self.tree_root
         shapes_list = list()
         for child in root:
             shapes_list.append(XmlParser.get_shape(child))
@@ -23,26 +24,19 @@ class XmlParser(object):
     def get_shape(root):
         if root.tag in Shape.basic_shapes:
             return XmlParser.get_basic(root)
-        if (root.tag in Composite.complex_shapes) or (root.tag == "Composite"):
-            return XmlParser.get_composite(root)
 
-        raise Exception("Unknown shape")
+        return XmlParser.get_composite(root)
 
     @staticmethod
     def get_basic(root):
         specifications = root.attrib
-
-        if root.tag == "Line":
-            p1 = Point((int(root[0].attrib["X"]), int(root[0].attrib["Y"])))
-            p2 = Point((int(root[1].attrib["X"]), int(root[1].attrib["Y"])))
-            return Line(p1, p2, specifications)
 
         if root.tag == "Circle":
             center = Point((int(root.attrib["X"]), int(root.attrib["Y"])))
             radius = int(root.attrib["Radius"])
             return Circle(center, radius, specifications)
 
-        if root.tag in ["Triangle", "Rectangle", "Polygon"]:
+        if root.tag in ["Line", "Triangle", "Rectangle", "Polygon"]:
             points = list()
             for child in root:
                 points.append(Point((int(child.attrib["X"]), int(child.attrib["Y"]))))

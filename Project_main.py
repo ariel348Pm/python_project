@@ -7,7 +7,7 @@ manager = Manager(image)
 
 path = "my_shapes.xml"
 parser = XmlParser(path)
-shapes = XmlParser.get_shapes(parser.tree_root)
+shapes = parser.get_shapes()
 manager.add_sprites(shapes)
 manager.draw_all()
 save_path = "result.jpg"
