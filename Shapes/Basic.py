@@ -31,9 +31,6 @@ class Shape(Sprite):
         self.points = self.translate(translation, self.points)
         self.unpack_points()
 
-    def copy_transform_data(self, specifications):
-        self.specifications.update(Shape.parse_specifications(specifications))
-
     def get_center(self):
         return self.center
 

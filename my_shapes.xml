@@ -1,5 +1,5 @@
 <Scene>
-<Composite Name="Panda" Draw="No">
+<Composite Name="Panda">
 <Circle X="100" Y="100" Radius="100" FillingColor="White" Color="Black" />
 <Circle X="25" Y="0" Radius="25" FillingColor="Black" Color="Black" />
 <Circle X="175" Y="0" Radius="25" FillingColor="Black" Color="Black" />
